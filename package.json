@@ -1,6 +1,6 @@
 {
   "name": "ts-file-router",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "router based on project files using typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

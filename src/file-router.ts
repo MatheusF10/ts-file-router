@@ -34,7 +34,7 @@ const serializeRoutes = (obj: any, ident = 2): string => {
 export const start = ({
   baseFolder,
   outputFile,
-  routeFileName = 'page.ts',
+  routeFileName = 'page.tsx',
 }: TStartConfigs) => {
   // Get the pages dir to resolve routes
   const basePath = path.resolve(process.cwd(), baseFolder);
@@ -64,7 +64,7 @@ export const start = ({
           './' + path.relative(basePath, dir).replaceAll(/\\/g, '/');
 
         // Remove extension from file to naming the route
-        const key = file.replace(/\.ts$/, '');
+        const key = path.basename(file, path.extname(file));
 
         if (dirInfo.isDirectory()) {
           // Dev friendly when enter in this conditional file is a directory(folder)
