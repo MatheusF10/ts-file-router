@@ -37,9 +37,9 @@ export const start = ({
   routeFileName = 'page.ts',
 }: TStartConfigs) => {
   // Get the pages dir to resolve routes
-  const basePath = path.resolve(__dirname, baseFolder);
+  const basePath = path.resolve(process.cwd(), baseFolder);
   // Output file for routes
-  const output = path.resolve(__dirname, outputFile);
+  const output = path.resolve(process.cwd(), outputFile);
 
   const generateRouter = async () => {
     const mapRoutes = async (dir: string) => {
