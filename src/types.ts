@@ -1,4 +1,4 @@
-export type TStartConfigs = {
+export type TGenerateRoutesConfig = {
   baseFolder: string;
   outputFile: string;
   routeFileName?: string;

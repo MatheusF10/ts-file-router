@@ -1,6 +1,6 @@
 {
   "name": "ts-file-router",
-  "version": "1.0.5",
+  "version": "2.0.0",
   "description": "router based on project files using typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,6 +8,7 @@
     "dist"
   ],
   "scripts": {
+    "start": "ts-node ./src/file-router",
     "build": "tsc"
   },
   "author": "MatheusF10",

@@ -1,2 +1,2 @@
-export { start } from './file-router';
-export * from './types';
+export { generateRoutes } from './file-router';
+export { TGenerateRoutesConfig } from './types';
