@@ -72,7 +72,11 @@ Create a script to generate your routes. Example:
 import { generateRoutesWithWatcher } from 'ts-file-router';
 
 generateRoutesWithWatcher({
-  input: { baseFolder, outputFile, exitCodeOnResolution },
+  input: {
+    baseFolder: 'src/screens',
+    outputFile: 'screens.ts',
+    exitCodeOnResolution: false,
+  },
   options: { debounce: 500 },
 });
 ```
