@@ -1,7 +1,17 @@
+type TWatcherOptions = {
+  debounce?: number;
+};
+
+export type TWatcherConfig = {
+  input: TGenerateRoutesConfig;
+  options?: TWatcherOptions;
+};
+
 export type TGenerateRoutesConfig = {
   baseFolder: string;
   outputFile: string;
   routeFileName?: string;
+  exitCodeOnResolution?: boolean;
 };
 
 export type TRoute = {

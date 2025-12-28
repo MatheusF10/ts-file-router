@@ -43,6 +43,40 @@ generateRoutes({
 });
 ```
 
+## 🎯 Usage With Vite
+
+Create a script to generate your routes. Example:
+
+```js
+// scripts/vite.config.ts
+import { generateRoutesPlugin } from 'ts-file-router';
+
+// https://vite.dev/config/
+export default defineConfig({
+  plugins: [
+    generateRoutesPlugin({
+      baseFolder: 'src/screens',
+      outputFile: 'screens.ts',
+      exitCodeOnResolution: false,
+    }),
+  ],
+});
+```
+
+## 🎯 Usage With Watcher (Chokidar peerDependencie)
+
+Create a script to generate your routes. Example:
+
+```js
+// scripts/generate-routes.mjs
+import { generateRoutesWithWatcher } from 'ts-file-router';
+
+generateRoutesWithWatcher({
+  input: { baseFolder, outputFile, exitCodeOnResolution },
+  options: { debounce: 500 },
+});
+```
+
 ## What this does
 
 - baseFolder: Root directory where your screens/pages live
