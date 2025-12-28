@@ -28,6 +28,8 @@ export const generateRoutesWithWatcher = async ({
   console.log(`👀 Watching folder: ${input.baseFolder} for changes...`);
 
   watcher.on('add', runFromWatcher);
+  watcher.on('unlink', runFromWatcher);
+  watcher.on('unlinkDir', runFromWatcher);
 
   return () => watcher.close();
 };
