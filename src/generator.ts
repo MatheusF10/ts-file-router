@@ -1,13 +1,14 @@
+import type { TRoutesTree, TGenerateRoutesConfig } from './types.js';
 import fs from 'fs/promises';
 import path from 'path';
-import { TRoutesTree, TGenerateRoutesConfig } from './types.js';
+
 import { serialize } from './serialize.js';
 
 export const generateRoutes = ({
   baseFolder,
   outputFile,
   routeFileName = 'page.tsx',
-  exitCodeOnResolution = true,
+  options = { exitCodeOnResolution: true },
 }: TGenerateRoutesConfig) => {
   // Get the pages dir to resolve routes
   const basePath = path.resolve(process.cwd(), baseFolder);
@@ -78,19 +79,55 @@ export const generateRoutes = ({
       // Promise writeFile was successfully resolved
       console.log('🚀 Routes generated successfully!\n');
 
-      if (exitCodeOnResolution) {
+      if (options.exitCodeOnResolution) {
         // Code 0 to finish the process as success
         process.exit(0);
       }
     } catch (err) {
       console.error('❌ Error generating routes:\n', err);
 
-      if (exitCodeOnResolution) {
+      if (options.exitCodeOnResolution) {
         // Code 1 to finish the process as error
         process.exit(1);
       }
     }
   };
+
+  const watcher = async ({ debounce = 500 }) => {
+    const { watch } = await import('chokidar');
+
+    let timeoutId: NodeJS.Timeout | null;
+
+    const watcher = watch(baseFolder, {
+      ignoreInitial: true,
+      ignored: `${baseFolder}/${outputFile}`,
+      persistent: true,
+    });
+
+    console.log(`👀 Watching folder: ${baseFolder} for changes...`);
+
+    const runFromWatcher = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      timeoutId = setTimeout(() => {
+        createRoutes();
+      }, debounce);
+    };
+
+    watcher.on('add', runFromWatcher);
+    watcher.on('unlink', runFromWatcher);
+    watcher.on('unlinkDir', runFromWatcher);
+
+    return () => watcher.close();
+  };
+
+  if (!!options.watcher) {
+    watcher(options.watcher);
+
+    return;
+  }
 
   createRoutes();
 };
