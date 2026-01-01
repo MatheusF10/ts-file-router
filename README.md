@@ -57,13 +57,12 @@ export default defineConfig({
     generateRoutesPlugin({
       baseFolder: 'src/screens',
       outputFile: 'screens.ts',
-      exitCodeOnResolution: false,
     }),
   ],
 });
 ```
 
-## 🎯 Usage With Watcher (Chokidar peerDependencie)
+## 🎯 Usage With Watcher (Chokidar Peer Dependencie)
 
 Create a script to generate your routes. Example:
 
@@ -71,13 +70,10 @@ Create a script to generate your routes. Example:
 // scripts/generate-routes.mjs
 import { generateRoutesWithWatcher } from 'ts-file-router';
 
-generateRoutesWithWatcher({
-  input: {
-    baseFolder: 'src/screens',
-    outputFile: 'screens.ts',
-    exitCodeOnResolution: false,
-  },
-  options: { debounce: 500 },
+generateRoutes({
+  baseFolder: 'src/screens',
+  outputFile: 'screens.ts',
+  options: { watcher: { debounce: 500 }, exitCodeOnResolution: false },
 });
 ```
 
@@ -92,3 +88,5 @@ generateRoutesWithWatcher({
 Run the script with:
 
 node scripts/generate-routes.mjs
+
+or setup generateRoutesPlugin in vite.config.ts
