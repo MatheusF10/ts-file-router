@@ -23,8 +23,12 @@ const stringifyRoutes = (obj: TRoutesTree): string => {
   return `{ ${entries.join(',\n')} }`;
 };
 
+let biome: Biome | null = null;
+
 const format = async (filePath: string, content: string) => {
-  const biome = await Biome.create({ distribution: Distribution.NODE });
+  if (biome === null) {
+    biome = await Biome.create({ distribution: Distribution.NODE });
+  }
 
   const project = biome.openProject();
 
