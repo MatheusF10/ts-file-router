@@ -3,6 +3,14 @@ import { serialize } from './serialize.js';
 import fs from 'fs/promises';
 import path from 'path';
 
+const getIgnoredOutputFile = (file: string, output: string) =>
+  file.includes(output);
+
+const getIgnoredFiles = (file: string, output: string) =>
+  file.includes('index') ||
+  file.startsWith('_') ||
+  getIgnoredOutputFile(file, output);
+
 export const generateRoutes = ({
   baseFolder,
   outputFile,
@@ -26,11 +34,7 @@ export const generateRoutes = ({
 
     for (const file of directory) {
       // ignore index files, underscore marked, or route file generated
-      if (
-        file.includes('index') ||
-        file.startsWith('_') ||
-        file.includes(outputFile)
-      ) {
+      if (getIgnoredFiles(file, outputFile)) {
         continue;
       }
 
@@ -99,8 +103,6 @@ export const generateRoutes = ({
   const watcher = async ({ debounce = 500 }) => {
     const { watch } = await import('chokidar');
 
-    const output = path.resolve(baseFolder, outputFile);
-
     let timeoutId: NodeJS.Timeout | null;
 
     const watcher = watch(baseFolder, {
@@ -108,7 +110,7 @@ export const generateRoutes = ({
       persistent: true,
     });
 
-    console.log(`👀 Watching folder: ${baseFolder} for changes...`);
+    console.log(`👀 Watching folder: "${baseFolder}" for changes...`);
 
     const runFromWatcher = () => {
       if (timeoutId) {
@@ -116,17 +118,15 @@ export const generateRoutes = ({
       }
 
       timeoutId = setTimeout(() => {
-        console.log(`👀 Files changed, regenerating routes...`);
-
         createRoutes();
       }, debounce);
     };
 
     watcher.on('all', (ev, file) => {
-      const resolvedPath = path.resolve(file);
+      const ignoredOuput = getIgnoredOutputFile(file, outputFile);
 
       // If output file as deleted regenerate it
-      if (resolvedPath === output && ev === 'unlink') {
+      if (ignoredOuput && ev === 'unlink') {
         console.log(`🚨 ${outputFile} was deleted, regenerating...`);
 
         runFromWatcher();
@@ -141,8 +141,12 @@ export const generateRoutes = ({
         'unlinkDir',
       ];
 
-      // If added, or change (renamed) or deleted update de routes
-      if (watchOnEvents.includes(ev) && resolvedPath !== output) {
+      const ignoredGeneralFiles = getIgnoredFiles(file, outputFile);
+
+      // If added, or change (renamed) or deleted, update routes
+      if (watchOnEvents.includes(ev) && !ignoredGeneralFiles) {
+        console.log(`👀 Watching files from path: "${file}" for changes...`);
+
         runFromWatcher();
       }
     });
