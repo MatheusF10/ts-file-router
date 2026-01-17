@@ -1,19 +1,23 @@
 import { Biome, Distribution } from '@biomejs/js-api';
-import type { TRoutesTree } from './types.js';
+import type { TRouteLeaf, TRoutesTree } from './types.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+const isRouteLeaf = (value: unknown): value is TRouteLeaf => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'path' in value &&
+    'import' in value
+  );
+};
+
 const stringifyRoutes = (obj: TRoutesTree): string => {
   const entries = Object.entries(obj).map(([key, value]) => {
-    if (
-      typeof value === 'object' &&
-      value !== null &&
-      'path' in value &&
-      'import' in value
-    ) {
+    if (isRouteLeaf(value)) {
       return `'${key}': { 
           path: '${value.path}', 
-          import: () => import('${value.import}')
+          import: import('${value.import}')
         }`;
     }
 

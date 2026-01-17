@@ -11,6 +11,9 @@ const getIgnoredFiles = (file: string, output: string) =>
   file.startsWith('_') ||
   getIgnoredOutputFile(file, output);
 
+const cleanPaths = (path: string) =>
+  path.replaceAll(/\\/gi, '/').replaceAll(/.(tsx|ts|jsx|js)/gi, '');
+
 export const generateRoutes = ({
   baseFolder,
   outputFile,
@@ -43,16 +46,10 @@ export const generateRoutes = ({
       const dirInfo = await fs.stat(fullPath);
 
       // Path to browser sync if necessary
-      const relativePath =
-        '/' + path.relative(basePath, dir).replaceAll(/\\/g, '/');
+      const relativePath = '/' + path.relative(basePath, dir);
 
       // Normalize import path to esm pattern
-      const importPath =
-        './' +
-        path
-          .relative(basePath, fullPath)
-          .replaceAll(/\\/gi, '/')
-          .replaceAll(/.(tsx|ts|jsx|js)/gi, '');
+      const importPath = './' + path.relative(basePath, fullPath);
 
       // Remove extension from file to naming the route
       const key = path.basename(file, path.extname(file));
@@ -69,8 +66,8 @@ export const generateRoutes = ({
       // Mount the route object with path like "/folder" and import
       // import will be like "(./baseFolder/file or ./baseFolder/folders).extension"
       routes[key] = {
-        path: relativePath,
-        import: importPath,
+        path: cleanPaths(relativePath),
+        import: cleanPaths(importPath),
       };
     }
 
@@ -145,7 +142,7 @@ export const generateRoutes = ({
 
       // If added, or change (renamed) or deleted, update routes
       if (watchOnEvents.includes(ev) && !ignoredGeneralFiles) {
-        console.log(`👀 Watching files from path: "${file}" for changes...`);
+        console.log(`🔎 Watching files from path: "${file}" for changes...`);
 
         runFromWatcher();
       }
