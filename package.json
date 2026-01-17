@@ -11,7 +11,8 @@
   "scripts": {
     "start": "tsx ./src/generator.ts",
     "prebuild": "rimraf dist",
-    "build": "tsc"
+    "build": "tsc",
+    "publish:package": "npm run build && npm publish"
   },
   "author": "MatheusF10",
   "license": "ISC",
