@@ -9,7 +9,8 @@
     "rootDir": "src",
     "strict": true,
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }

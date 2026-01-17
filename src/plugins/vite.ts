@@ -5,7 +5,10 @@ import { generateRoutes } from '../generator.js';
 export const generateRoutesPlugin = ({
   baseFolder,
   outputFile,
-  options = { watcher: { debounce: 500 }, exitCodeOnResolution: false },
+  options = {
+    watcher: { watch: true, debounce: 500 },
+    exitCodeOnResolution: false,
+  },
 }: TGenerateRoutesConfig): Plugin => {
   return {
     name: 'file-router-plugin',

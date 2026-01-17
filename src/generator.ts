@@ -21,7 +21,7 @@ export const generateRoutes = ({
 
     if (!directory.includes(routeFileName)) {
       throw new Error(
-        `Invalid pages structure: The folder "${dir}" must contain a ${routeFileName} file.`
+        `Invalid pages structure: The folder "${dir}" must contain a ${routeFileName} file.`,
       );
     }
 
@@ -45,7 +45,11 @@ export const generateRoutes = ({
 
       // Normalize import path to esm pattern
       const importPath =
-        './' + path.relative(basePath, fullPath).replaceAll(/\\/g, '/');
+        './' +
+        path
+          .relative(basePath, fullPath)
+          .replaceAll(/\\/gi, '/')
+          .replaceAll(/.(tsx|ts|jsx|js)/gi, '');
 
       // Remove extension from file to naming the route
       const key = path.basename(file, path.extname(file));
@@ -75,7 +79,7 @@ export const generateRoutes = ({
       // Create routes
       const routes = await mapRoutes(basePath);
       // Create ts file
-      serialize(routes, output);
+      await serialize(routes, output);
       // Promise writeFile was successfully resolved
       console.log('🚀 Routes generated successfully!\n');
 

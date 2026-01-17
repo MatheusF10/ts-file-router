@@ -1,4 +1,5 @@
 type TWatcherConfig = {
+  watch: boolean;
   debounce?: number;
 };
 
@@ -14,11 +15,11 @@ export type TGenerateRoutesConfig = {
   options?: TGenerateRoutesOptions;
 };
 
-export type TRoute = {
+export type TRouteLeaf = {
   path: string;
   import: string;
 };
 
 export type TRoutesTree = {
-  [key: string]: TRoute | TRoutesTree;
+  [key: string]: TRouteLeaf | TRoutesTree;
 };

@@ -68,12 +68,15 @@ Create a script to generate your routes. Example:
 
 ```js
 // scripts/generate-routes.mjs
-import { generateRoutesWithWatcher } from 'ts-file-router';
+import { generateRoutes } from 'ts-file-router';
 
 generateRoutes({
   baseFolder: 'src/screens',
   outputFile: 'screens.ts',
-  options: { watcher: { debounce: 500 }, exitCodeOnResolution: false },
+  options: {
+    watcher: { watch: true, debounce: 500 },
+    exitCodeOnResolution: false,
+  },
 });
 ```
 
@@ -90,3 +93,14 @@ Run the script with:
 node scripts/generate-routes.mjs
 
 or setup generateRoutesPlugin in vite.config.ts
+
+## Output based on your folder
+
+```ts
+export const routes = {
+  page: {
+    path: '/',
+    import: () => import('./page'),
+  },
+} as const;
+```

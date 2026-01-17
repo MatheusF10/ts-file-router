@@ -1,29 +1,59 @@
+import { Biome, Distribution } from '@biomejs/js-api';
 import type { TRoutesTree } from './types.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-const stringifyTS = (obj: any, indent = 0): string => {
-  const spaces = ' '.repeat(indent);
-  const innerSpaces = ' '.repeat(indent + 2);
-
-  if (typeof obj !== 'object' || obj === null) {
-    return JSON.stringify(obj);
-  }
-
+const stringifyRoutes = (obj: TRoutesTree): string => {
   const entries = Object.entries(obj).map(([key, value]) => {
-    const validKey = /^[a-z_$][a-z0-9_$]*$/i.test(key)
-      ? key
-      : JSON.stringify(key);
-    return `${innerSpaces}${validKey}: ${stringifyTS(value, indent + 2)}`;
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      'path' in value &&
+      'import' in value
+    ) {
+      return `'${key}': { 
+          path: '${value.path}', 
+          import: () => import('${value.import}')
+        }`;
+    }
+
+    return `'${key}': ${stringifyRoutes(value as TRoutesTree)}`;
   });
 
-  return `{\n${entries.join(',\n')}\n${spaces}}`;
+  return `{ ${entries.join(',\n')} }`;
 };
 
-export const serialize = (routes: TRoutesTree, outputPath: string) => {
-  const content = `export const routes = ${stringifyTS(routes)} as const;\n`;
+const format = async (filePath: string, content: string) => {
+  const biome = await Biome.create({ distribution: Distribution.NODE });
 
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  const project = biome.openProject();
 
-  fs.writeFileSync(outputPath, content, 'utf8');
+  biome.applyConfiguration(project.projectKey, {
+    formatter: { enabled: true, indentStyle: 'space', lineWidth: 100 },
+    javascript: { formatter: { quoteStyle: 'single' } },
+  });
+
+  const formatted = biome.formatContent(project.projectKey, content, {
+    filePath: path.basename(filePath),
+  });
+
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+
+  fs.writeFileSync(filePath, formatted.content, 'utf8');
+};
+
+export const serialize = async (routes: TRoutesTree, outputPath: string) => {
+  const rawCode = `
+  // GENERATED WITH TS-FILE-ROUTER DO NOT EDIT
+
+  export const routes = ${stringifyRoutes(routes)} as const;
+  \n`;
+
+  try {
+    await format(path.resolve(outputPath), rawCode);
+
+    console.log('✨ File was parsed succesfully');
+  } catch (err) {
+    console.error('❌ Error parsing file:\n', err);
+  }
 };

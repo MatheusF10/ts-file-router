@@ -1,6 +1,6 @@
 {
   "name": "ts-file-router",
-  "version": "3.0.1",
+  "version": "4.0.1",
   "description": "router based on project files using typescript",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,5 +26,9 @@
   "peerDependencies": {
     "chokidar": ">=4.0.0",
     "vite": ">=3.0.0"
+  },
+  "dependencies": {
+    "@biomejs/js-api": "^4.0.0",
+    "@biomejs/wasm-nodejs": "^2.3.11"
   }
 }
