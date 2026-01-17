@@ -1,8 +1,7 @@
 import type { TRoutesTree, TGenerateRoutesConfig } from './types.js';
+import { serialize } from './serialize.js';
 import fs from 'fs/promises';
 import path from 'path';
-
-import { serialize } from './serialize.js';
 
 export const generateRoutes = ({
   baseFolder,
@@ -100,11 +99,12 @@ export const generateRoutes = ({
   const watcher = async ({ debounce = 500 }) => {
     const { watch } = await import('chokidar');
 
+    const output = path.resolve(baseFolder, outputFile);
+
     let timeoutId: NodeJS.Timeout | null;
 
     const watcher = watch(baseFolder, {
-      ignoreInitial: true,
-      ignored: `${baseFolder}/${outputFile}`,
+      ignoreInitial: false,
       persistent: true,
     });
 
@@ -116,13 +116,36 @@ export const generateRoutes = ({
       }
 
       timeoutId = setTimeout(() => {
+        console.log(`👀 Files changed, regenerating routes...`);
+
         createRoutes();
       }, debounce);
     };
 
-    watcher.on('add', runFromWatcher);
-    watcher.on('unlink', runFromWatcher);
-    watcher.on('unlinkDir', runFromWatcher);
+    watcher.on('all', (ev, file) => {
+      const resolvedPath = path.resolve(file);
+
+      // If output file as deleted regenerate it
+      if (resolvedPath === output && ev === 'unlink') {
+        console.log(`🚨 ${outputFile} was deleted, regenerating...`);
+
+        runFromWatcher();
+
+        return;
+      }
+
+      const watchOnEvents: (typeof ev)[] = [
+        'add',
+        'change',
+        'unlink',
+        'unlinkDir',
+      ];
+
+      // If added, or change (renamed) or deleted update de routes
+      if (watchOnEvents.includes(ev) && resolvedPath !== output) {
+        runFromWatcher();
+      }
+    });
 
     return () => watcher.close();
   };
