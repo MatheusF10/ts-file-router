@@ -171,12 +171,3 @@ export const generateRoutes = ({
 
   createRoutes();
 };
-
-generateRoutes({
-  baseFolder: 'src/screens',
-  outputFile: 'routes.ts',
-  options: {
-    exitCodeOnResolution: false,
-    watcher: { watch: true, debounce: 1000 },
-  },
-});
