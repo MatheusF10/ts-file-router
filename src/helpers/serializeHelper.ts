@@ -27,8 +27,8 @@ const getBiomeSingleton = async () => {
   }
 
   return {
+    biome: biomeInstance.biome,
     projectKey: biomeInstance.project.projectKey,
-    formatContent: biomeInstance.biome.formatContent,
   };
 };
 
@@ -116,14 +116,12 @@ const createRoutesFile = (obj: TRoutesTree): ts.SourceFile => {
 };
 
 const formatAndWriteOutputFile = async (filePath: string, code: string) => {
-  const biomeInstance = await getBiomeSingleton();
+  const biomeSingleton = await getBiomeSingleton();
 
-  const formatted = biomeInstance.formatContent(
-    biomeInstance.projectKey,
+  const formatted = biomeSingleton.biome.formatContent(
+    biomeSingleton.projectKey,
     code,
-    {
-      filePath: path.basename(filePath),
-    },
+    { filePath: path.basename(filePath) },
   );
 
   fs.mkdirSync(path.dirname(filePath), { recursive: true });

@@ -15,49 +15,58 @@ export const generateRoutes = ({
 
   const mapRoutes = async (dir: string) => {
     const routes: TRoutesTree = {};
-    const directory = await fs.readdir(dir);
 
-    for (const file of directory) {
-      if (!directory.length || directory.length === 0) {
+    try {
+      const directory = await fs.readdir(dir);
+
+      if (!directory || !directory.length || directory.length === 0) {
         throw new Error(
           `Invalid pages structure: The folder "${dir}" must contain at least one valid file.`,
         );
       }
-      // ignore index files, underscore marked, or route file generated
-      if (FileHelper.getIgnoredFiles(file, outputFile)) {
-        continue;
+
+      for (const file of directory) {
+        // ignore index files, underscore marked, or route file generated
+        if (FileHelper.getIgnoredFiles(file, outputFile)) {
+          continue;
+        }
+
+        const fullPath = path.join(dir, file);
+
+        // Get directory info to control file or folder
+        const dirInfo = await fs.stat(fullPath);
+
+        // Path to browser sync if necessary
+        const relativePath = '/' + path.relative(basePath, dir);
+
+        const importPath = './' + path.relative(basePath, fullPath);
+
+        // Remove extension from file to naming the route
+        const key = path.basename(file, path.extname(file));
+
+        if (dirInfo.isDirectory()) {
+          // Dev friendly when enter in this conditional file is a directory(folder)
+          const directory = file;
+          // Recursively for sub directories
+          routes[directory] = await mapRoutes(fullPath);
+
+          continue;
+        }
+
+        // Mount the route object with path like "/folder" and import
+        // import will be like "import((./baseFolder/file or ./baseFolder/folders).extension)"
+        routes[key] = {
+          // Normalize path
+          path: FileHelper.cleanPaths(relativePath),
+          // Normalize import path to esm pattern
+          import: FileHelper.cleanPaths(importPath),
+        };
       }
+    } catch (err) {
+      console.error(`Error mapping routes ${dir}:`, err);
 
-      const fullPath = path.join(dir, file);
-
-      // Get directory info to control file or folder
-      const dirInfo = await fs.stat(fullPath);
-
-      // Path to browser sync if necessary
-      const relativePath = '/' + path.relative(basePath, dir);
-
-      const importPath = './' + path.relative(basePath, fullPath);
-
-      // Remove extension from file to naming the route
-      const key = path.basename(file, path.extname(file));
-
-      if (dirInfo.isDirectory()) {
-        // Dev friendly when enter in this conditional file is a directory(folder)
-        const directory = file;
-        // Recursively for sub directories
-        routes[directory] = await mapRoutes(fullPath);
-
-        continue;
-      }
-
-      // Mount the route object with path like "/folder" and import
-      // import will be like "import((./baseFolder/file or ./baseFolder/folders).extension)"
-      routes[key] = {
-        // Normalize path
-        path: FileHelper.cleanPaths(relativePath),
-        // Normalize import path to esm pattern
-        import: FileHelper.cleanPaths(importPath),
-      };
+      // Stop the process immediatelly
+      process.exit(1);
     }
 
     return routes;
@@ -108,6 +117,8 @@ export const generateRoutes = ({
       }, debounce);
     };
 
+    runFromWatcher();
+
     watcher.on('all', (ev, file) => {
       const ignoredOuput = FileHelper.getIgnoredOutputFile(file, outputFile);
 
@@ -138,7 +149,18 @@ export const generateRoutes = ({
       }
     });
 
-    return () => watcher.close();
+    const cleanup = async () => {
+      console.log('🛑 Stopping watcher...');
+
+      await watcher.close();
+      // Code 0 to finish the process as success
+      process.exit(0);
+    };
+
+    // If CRTL + C was pressed
+    process.on('SIGINT', cleanup);
+    // If Script or container treatment
+    process.on('SIGTERM', cleanup);
   };
 
   if (!!options.watcher) {
@@ -149,3 +171,12 @@ export const generateRoutes = ({
 
   createRoutes();
 };
+
+generateRoutes({
+  baseFolder: 'src/screens',
+  outputFile: 'routes.ts',
+  options: {
+    exitCodeOnResolution: false,
+    watcher: { watch: true, debounce: 1000 },
+  },
+});

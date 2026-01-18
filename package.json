@@ -29,7 +29,7 @@
     "vite": ">=3.0.0"
   },
   "dependencies": {
-    "@biomejs/js-api": "^4.0.0",
-    "@biomejs/wasm-nodejs": "^2.3.11"
+    "@biomejs/js-api": "4.0.0",
+    "@biomejs/wasm-nodejs": "2.3.11"
   }
 }
