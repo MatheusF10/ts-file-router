@@ -1,23 +1,11 @@
 import type { TRoutesTree, TGenerateRoutesConfig } from './types.js';
-import { serialize } from './serialize.js';
+import { FileHelper, SerializeHelper } from './helpers/index.js';
 import fs from 'fs/promises';
 import path from 'path';
-
-const getIgnoredOutputFile = (file: string, output: string) =>
-  file.includes(output);
-
-const getIgnoredFiles = (file: string, output: string) =>
-  file.includes('index') ||
-  file.startsWith('_') ||
-  getIgnoredOutputFile(file, output);
-
-const cleanPaths = (path: string) =>
-  path.replaceAll(/\\/gi, '/').replaceAll(/.(tsx|ts|jsx|js)/gi, '');
 
 export const generateRoutes = ({
   baseFolder,
   outputFile,
-  routeFileName = 'page.tsx',
   options = { exitCodeOnResolution: true },
 }: TGenerateRoutesConfig) => {
   // Get the pages dir to resolve routes
@@ -29,26 +17,25 @@ export const generateRoutes = ({
     const routes: TRoutesTree = {};
     const directory = await fs.readdir(dir);
 
-    if (!directory.includes(routeFileName)) {
-      throw new Error(
-        `Invalid pages structure: The folder "${dir}" must contain a ${routeFileName} file.`,
-      );
-    }
-
     for (const file of directory) {
+      if (!directory.length || directory.length === 0) {
+        throw new Error(
+          `Invalid pages structure: The folder "${dir}" must contain at least one valid file.`,
+        );
+      }
       // ignore index files, underscore marked, or route file generated
-      if (getIgnoredFiles(file, outputFile)) {
+      if (FileHelper.getIgnoredFiles(file, outputFile)) {
         continue;
       }
 
       const fullPath = path.join(dir, file);
+
       // Get directory info to control file or folder
       const dirInfo = await fs.stat(fullPath);
 
       // Path to browser sync if necessary
       const relativePath = '/' + path.relative(basePath, dir);
 
-      // Normalize import path to esm pattern
       const importPath = './' + path.relative(basePath, fullPath);
 
       // Remove extension from file to naming the route
@@ -64,10 +51,12 @@ export const generateRoutes = ({
       }
 
       // Mount the route object with path like "/folder" and import
-      // import will be like "(./baseFolder/file or ./baseFolder/folders).extension"
+      // import will be like "import((./baseFolder/file or ./baseFolder/folders).extension)"
       routes[key] = {
-        path: cleanPaths(relativePath),
-        import: cleanPaths(importPath),
+        // Normalize path
+        path: FileHelper.cleanPaths(relativePath),
+        // Normalize import path to esm pattern
+        import: FileHelper.cleanPaths(importPath),
       };
     }
 
@@ -79,7 +68,7 @@ export const generateRoutes = ({
       // Create routes
       const routes = await mapRoutes(basePath);
       // Create ts file
-      await serialize(routes, output);
+      await SerializeHelper.serializeOutputFile(routes, output);
       // Promise writeFile was successfully resolved
       console.log('🚀 Routes generated successfully!\n');
 
@@ -120,7 +109,7 @@ export const generateRoutes = ({
     };
 
     watcher.on('all', (ev, file) => {
-      const ignoredOuput = getIgnoredOutputFile(file, outputFile);
+      const ignoredOuput = FileHelper.getIgnoredOutputFile(file, outputFile);
 
       // If output file as deleted regenerate it
       if (ignoredOuput && ev === 'unlink') {
@@ -133,12 +122,13 @@ export const generateRoutes = ({
 
       const watchOnEvents: (typeof ev)[] = [
         'add',
+        'addDir',
         'change',
         'unlink',
         'unlinkDir',
       ];
 
-      const ignoredGeneralFiles = getIgnoredFiles(file, outputFile);
+      const ignoredGeneralFiles = FileHelper.getIgnoredFiles(file, outputFile);
 
       // If added, or change (renamed) or deleted, update routes
       if (watchOnEvents.includes(ev) && !ignoredGeneralFiles) {

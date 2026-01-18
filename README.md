@@ -39,7 +39,6 @@ import { generateRoutes } from 'ts-file-router';
 generateRoutes({
   baseFolder: 'src/screens',
   outputFile: 'src/screens/routes.ts',
-  routeFileName: 'page.tsx',
 });
 ```
 
@@ -100,7 +99,7 @@ or setup generateRoutesPlugin in vite.config.ts
 export const routes = {
   page: {
     path: '/',
-    import: () => import('./page'),
+    import: import('./page'),
   },
 } as const;
 ```
