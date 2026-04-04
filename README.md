@@ -1,19 +1,20 @@
 # 📦 ts-file-router
 
-A lightweight TypeScript filesystem router generator.  
-Automatically scans folders and outputs a clean, structured `routes.ts` tree ready for dynamic imports (e.g., `React.lazy`).
+A lightweight **filesystem router generator** for TypeScript projects. Automatically scans your folder structure and generates a clean, typed `routes.ts` tree ready for dynamic imports (e.g., `React.lazy`).
 
 ---
 
 ## ✨ Features
 
-- 🔍 Recursive folder scanning
-- 📄 Auto-generated `routes.ts` (TypeScript code, no `resolveJsonModule` required)
-- ⚛️ Works perfectly with `React.lazy()` and dynamic imports
-- 📘 Full TypeScript `.d.ts` definitions included
-- 🧩 Custom route file name (default: `page.ts`)
-- 🪶 Zero runtime dependencies
-- 🎯 Clean, formatted output with readable keys
+- 🔍 **Automatic folder scanning** - Recursively scans your pages/screens directory
+- 📄 **Generated TypeScript routes** - Fully typed `routes.ts` file with `as const` assertions
+- ⚛️ **Framework agnostic** - Works with React.lazy, Vue, Solid, or any framework with dynamic imports
+- 🪶 **Zero runtime dependencies** - Only used at build/dev time
+- 🔄 **File watcher support** - Auto-regenerate routes when files change (powered by Chokidar)
+- 🎨 **Biome formatting** - Output files are automatically formatted with Biome
+- 🧩 **Vite plugin** - Seamless integration with Vite dev server
+- 🚫 **Smart file filtering** - Ignores `index` files, `_` prefixed files (private routes), and output files
+- 📘 **Full TypeScript support** - Complete `.d.ts` definitions included
 
 ---
 
@@ -21,16 +22,24 @@ Automatically scans folders and outputs a clean, structured `routes.ts` tree rea
 
 ```bash
 npm install ts-file-router
-# or
-yarn add ts-file-router
+```
 
+**Optional dependencies:**
+
+```bash
+# For file watcher support
+npm install chokidar
+
+# Vite is automatically supported as a peer dependency
 ```
 
 ---
 
-## 🎯 Usage
+## 🚀 Quick Start
 
-Create a script to generate your routes. Example:
+### 1. Basic Usage (One-time generation)
+
+Create a script to generate your routes:
 
 ```js
 // scripts/generate-routes.mjs
@@ -38,68 +47,239 @@ import { generateRoutes } from 'ts-file-router';
 
 generateRoutes({
   baseFolder: 'src/screens',
-  outputFile: 'src/screens/routes.ts',
+  outputFile: 'routes.ts',
 });
 ```
 
-## 🎯 Usage With Vite
+Run it:
 
-Create a script to generate your routes. Example:
+```bash
+node scripts/generate-routes.mjs
+```
+
+### 2. With File Watcher (Auto-regenerate on changes)
 
 ```js
-// scripts/vite.config.ts
+// scripts/generate-routes.mjs
+import { generateRoutes } from 'ts-file-router';
+
+generateRoutes({
+  baseFolder: 'src/screens',
+  outputFile: 'routes.ts',
+  options: {
+    watcher: {
+      watch: true,
+      debounce: 500, // Wait 500ms after changes before regenerating
+    },
+    exitCodeOnResolution: false, // Don't exit process after generation
+  },
+});
+```
+
+This will keep running and regenerate routes whenever you add, remove, or modify files in the `src/screens` folder.
+
+### 3. With Vite Plugin
+
+```ts
+// vite.config.ts
+import { defineConfig } from 'vite';
 import { generateRoutesPlugin } from 'ts-file-router';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     generateRoutesPlugin({
       baseFolder: 'src/screens',
-      outputFile: 'screens.ts',
+      outputFile: 'src/screens/routes.ts',
+      // Optional: customize watcher behavior
+      options: {
+        watcher: { watch: true, debounce: 500 },
+        exitCodeOnResolution: false,
+      },
     }),
   ],
 });
 ```
 
-## 🎯 Usage With Watcher (Chokidar Peer Dependencie)
+The plugin automatically runs during Vite's dev server (`vite dev`) and regenerates routes on file changes.
 
-Create a script to generate your routes. Example:
+---
 
-```js
-// scripts/generate-routes.mjs
-import { generateRoutes } from 'ts-file-router';
+## 📂 How It Works
 
-generateRoutes({
-  baseFolder: 'src/screens',
-  outputFile: 'screens.ts',
-  options: {
-    watcher: { watch: true, debounce: 500 },
-    exitCodeOnResolution: false,
-  },
-});
+Given this folder structure:
+
+```
+src/screens/                  # Home page
+├── about/
+│   └── page.tsx               # About page
+├── users/
+│   ├── page.tsx               # Users list
+│   ├── profile/
+│   │   └── page.tsx          # User profile
+│   └── _private/
+│       └── page.tsx          # Ignored (starts with _)
+└── index.tsx                  # Ignored (index file)
 ```
 
-## What this does
-
-- baseFolder: Root directory where your screens/pages live
-
-- routeFileName: File that represents a route (e.g. page.tsx)
-
-- outputFile: Generated routes file (fully typed)
-
-Run the script with:
-
-node scripts/generate-routes.mjs
-
-or setup generateRoutesPlugin in vite.config.ts
-
-## Output based on your folder
+Generates:
 
 ```ts
+// GENERATED WITH TS-FILE-ROUTER DO NOT EDIT
 export const routes = {
-  page: {
-    path: '/',
-    import: import('./page'),
+  about: {
+    path: '/about',
+    import: () => import('./about/page'),
+  },
+  users: {
+    page: {
+      path: '/users',
+      import: () => import('./users/page'),
+    },
+    profile: {
+      path: '/users/profile',
+      import: () => import('./users/profile/page'),
+    },
   },
 } as const;
 ```
+
+---
+
+## 🔧 Configuration Options
+
+### `generateRoutes()` Parameters
+
+| Parameter    | Type                     | Required | Description                        |
+| ------------ | ------------------------ | -------- | ---------------------------------- |
+| `baseFolder` | `string`                 | ✅ Yes   | Root directory to scan for routes  |
+| `outputFile` | `string`                 | ✅ Yes   | Path for the generated routes file |
+| `options`    | `TGenerateRoutesOptions` | ❌ No    | Additional configuration           |
+
+### Options Object
+
+```ts
+interface TGenerateRoutesOptions {
+  watcher?: {
+    watch: boolean; // Enable file watching
+    debounce?: number; // Debounce delay in ms (default: 500)
+  };
+  exitCodeOnResolution?: boolean; // Exit process after generation (default: true)
+}
+```
+
+### `exitCodeOnResolution`
+
+- **`true`** (default for CLI): Process exits with code `0` on success or `1` on error
+- **`false`** (default for Vite/plugin): Process keeps running (required for watchers)
+
+---
+
+## 🎯 Usage Examples
+
+### With React Router And React Lazy Using
+
+```tsx
+import { routes } from './screens/routes';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React from 'react';
+
+const About = lazy(() =>
+  routes.about.import().then((r) => ({ default: res.About })),
+);
+
+const Profile = lazy(() =>
+  routes.users.profile.import().then((r) => ({ default: res.Profile })),
+);
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path={routes.about.path} element={<About />} />
+        <Route path={routes.users.profile.path} element={<Profile />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+
+---
+
+## 🚫 File Filtering Rules
+
+The following files/folders are **automatically ignored**:
+
+- **`index.*`** files - Index files are skipped
+- **`_` prefixed** files/folders - Files starting with underscore are treated as private
+- **Output file** - The generated routes file is ignored to prevent infinite loops
+
+This allows you to have helper files, components, or private routes alongside your page files without polluting the routes tree.
+
+---
+
+## 📦 Output File Structure
+
+The generated file is a TypeScript module with:
+
+- ✅ `export const routes` - Named export with all routes
+- ✅ `as const` assertion - Full type inference for route paths and imports
+
+## 🛠 Advanced Usage
+
+### Custom Route File Names
+
+By default, any file (except ignored ones) becomes a route. You can control this by:
+
+1. Using a consistent naming convention (e.g., all pages named `page.tsx`)
+2. Using `_` prefix for non-route files: `_components.tsx`, `_utils.ts`
+
+### Watcher Events
+
+When using the watcher, routes regenerate on:
+
+- `add` - New file added
+- `addDir` - New directory added
+- `change` - File modified
+- `unlink` - File deleted
+- `unlinkDir` - Directory deleted
+
+If the output file is deleted, it's automatically regenerated.
+
+### Graceful Shutdown
+
+The watcher listens for:
+
+- `SIGINT` (Ctrl+C) - Graceful cleanup
+- `SIGTERM` - Container/process termination
+
+Both trigger proper watcher cleanup before exit.
+
+---
+
+## 📝 Tips
+
+1. **Add to `package.json`**:
+
+```json
+{
+  "scripts": {
+    "generate:routes": "node scripts/generate-routes.mjs",
+    "dev": "npm run generate:routes && vite",
+    "dev:watch": "node scripts/generate-routes.mjs --watch"
+  }
+}
+```
+
+2. **Use relative paths in output**: The `outputFile` path is relative to `baseFolder`.
+
+---
+
+## 🤝 Contributing
+
+Found a bug or have a feature request? Open an issue or submit a PR!
+
+---
+
+## 📄 License
+
+ISC © MatheusF10

@@ -55,10 +55,17 @@ const createRouteObject = (obj: TRoutesTree): ts.Expression => {
             ),
             ts.factory.createPropertyAssignment(
               'import',
-              ts.factory.createCallExpression(
-                ts.factory.createIdentifier('import'),
-                undefined,
-                [ts.factory.createStringLiteral(value.import)],
+              ts.factory.createArrowFunction(
+                undefined, // modifiers
+                undefined, // type parameters
+                [], // parameters
+                undefined, // return type
+                ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken), // =>
+                ts.factory.createCallExpression(
+                  ts.factory.createIdentifier('import'),
+                  undefined,
+                  [ts.factory.createStringLiteral(value.import)],
+                ),
               ),
             ),
           ],
