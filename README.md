@@ -6,10 +6,10 @@ A lightweight **filesystem router generator** for TypeScript projects. Automatic
 
 ## ✨ Features
 
-- 🔍 **Automatic folder scanning** - Recursively scans your pages/screens directory
+- 🔍 **Automatic folder scanning** - Automatically scans your configured directory to build a complete route tree manifest.
 - 📄 **Generated TypeScript routes** - Fully typed `routes.ts` file with `as const` assertions
 - ⚛️ **Framework agnostic** - Works with React.lazy, Vue, Solid, or any framework with dynamic imports
-- 🪶 **Zero runtime dependencies** - Only used at build/dev time
+- 🪶 **Zero runtime dependencies** - The generated routes file is plain TypeScript/JavaScript; your final bundle won't include any extra library code.
 - 🔄 **File watcher support** - Auto-regenerate routes when files change (powered by Chokidar)
 - 🎨 **Biome formatting** - Output files are automatically formatted with Biome
 - 🧩 **Vite plugin** - Seamless integration with Vite dev server
@@ -43,10 +43,10 @@ Create a script to generate your routes:
 
 ```js
 // scripts/generate-routes.mjs
-import { generateRoutes } from 'ts-file-router';
+import { generateFileRouter } from 'ts-file-router';
 
-generateRoutes({
-  baseFolder: 'src/screens',
+generateFileRouter({
+  baseFolder: './src/screens',
   outputFile: 'routes.ts',
 });
 ```
@@ -61,11 +61,11 @@ node scripts/generate-routes.mjs
 
 ```js
 // scripts/generate-routes.mjs
-import { generateRoutes } from 'ts-file-router';
+import { generateFileRouter } from 'ts-file-router';
 
-generateRoutes({
-  baseFolder: 'src/screens',
-  outputFile: 'routes.ts',
+generateFileRouter({
+  dir: './src/screens',
+  outputFilename: 'routes.ts',
   options: {
     watcher: {
       watch: true,
@@ -83,13 +83,13 @@ This will keep running and regenerate routes whenever you add, remove, or modify
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite';
-import { generateRoutesPlugin } from 'ts-file-router';
+import { generateViteFileRouter } from 'ts-file-router';
 
 export default defineConfig({
   plugins: [
-    generateRoutesPlugin({
-      baseFolder: 'src/screens',
-      outputFile: 'src/screens/routes.ts',
+    generateViteFileRouter({
+      dir: './src/screens',
+      outputFilename: 'routes.ts',
       // Optional: customize watcher behavior
       options: {
         watcher: { watch: true, debounce: 500 },
@@ -147,13 +147,13 @@ export const routes = {
 
 ## 🔧 Configuration Options
 
-### `generateRoutes()` Parameters
+### `generateFileRouter()` Parameters
 
-| Parameter    | Type                     | Required | Description                        |
-| ------------ | ------------------------ | -------- | ---------------------------------- |
-| `baseFolder` | `string`                 | ✅ Yes   | Root directory to scan for routes  |
-| `outputFile` | `string`                 | ✅ Yes   | Path for the generated routes file |
-| `options`    | `TGenerateRoutesOptions` | ❌ No    | Additional configuration           |
+| Parameter        | Type                     | Required | Description                        |
+| ---------------- | ------------------------ | -------- | ---------------------------------- |
+| `dir`            | `string`                 | ✅ Yes   | Root directory to scan for routes  |
+| `outputFilename` | `string`                 | ✅ Yes   | Path for the generated routes file |
+| `options`        | `TGenerateRoutesOptions` | ❌ No    | Additional configuration           |
 
 ### Options Object
 
@@ -239,7 +239,6 @@ When using the watcher, routes regenerate on:
 
 - `add` - New file added
 - `addDir` - New directory added
-- `change` - File modified
 - `unlink` - File deleted
 - `unlinkDir` - Directory deleted
 
@@ -270,7 +269,7 @@ Both trigger proper watcher cleanup before exit.
 }
 ```
 
-2. **Use relative paths in output**: The `outputFile` path is relative to `baseFolder`.
+2. **Use relative paths in output**: The `outputFilename` path is relative to `dir`.
 
 ---
 

@@ -1,23 +1,23 @@
 import type { Plugin } from 'vite';
 import { TGenerateRoutesConfig } from '../types.js';
-import { generateRoutes } from '../generator.js';
+import { generateFileRouter } from '../generator.js';
 
-export const generateRoutesPlugin = ({
-  baseFolder,
-  outputFile,
+export const generateViteFileRouter = ({
+  dir,
+  outputFilename,
   options = {
-    watcher: { watch: true, debounce: 500 },
     exitCodeOnResolution: false,
+    watcher: { watch: true, debounce: 500 },
   },
 }: TGenerateRoutesConfig): Plugin => {
   return {
-    name: 'file-router-plugin',
     apply: 'serve',
+    name: 'generate-vite-file-router',
     buildStart() {
-      generateRoutes({
-        baseFolder,
-        outputFile,
+      generateFileRouter({
+        dir,
         options,
+        outputFilename,
       });
     },
   };

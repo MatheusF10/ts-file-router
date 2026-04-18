@@ -10,7 +10,7 @@ const biomeInstance = {
   project: null as OpenProjectResult | null,
 };
 
-const getBiomeSingleton = async () => {
+const _getBiomeSingleton = async () => {
   if (!biomeInstance.biome) {
     biomeInstance.biome = await Biome.create({
       distribution: Distribution.NODE,
@@ -33,7 +33,7 @@ const getBiomeSingleton = async () => {
 };
 
 // Type guard
-const isRouteLeaf = (value: unknown): value is TRouteLeaf => {
+const _isRouteLeaf = (value: unknown): value is TRouteLeaf => {
   return (
     typeof value === 'object' &&
     value !== null &&
@@ -42,9 +42,9 @@ const isRouteLeaf = (value: unknown): value is TRouteLeaf => {
   );
 };
 
-const createRouteObject = (obj: TRoutesTree): ts.Expression => {
+const _createRouteObject = (obj: TRoutesTree): ts.Expression => {
   const properties = Object.entries(obj).map(([key, value]) => {
-    if (isRouteLeaf(value)) {
+    if (_isRouteLeaf(value)) {
       return ts.factory.createPropertyAssignment(
         ts.factory.createIdentifier(key),
         ts.factory.createObjectLiteralExpression(
@@ -77,7 +77,7 @@ const createRouteObject = (obj: TRoutesTree): ts.Expression => {
     // Recursive object
     return ts.factory.createPropertyAssignment(
       ts.factory.createIdentifier(key),
-      createRouteObject(value),
+      _createRouteObject(value),
     );
   });
 
@@ -85,7 +85,7 @@ const createRouteObject = (obj: TRoutesTree): ts.Expression => {
 };
 
 const createRoutesFile = (obj: TRoutesTree): ts.SourceFile => {
-  const routesObject = createRouteObject(obj);
+  const routesObject = _createRouteObject(obj);
 
   // Create AST from routes variable
   const exportStatement = ts.factory.createVariableStatement(
@@ -122,8 +122,8 @@ const createRoutesFile = (obj: TRoutesTree): ts.SourceFile => {
   );
 };
 
-const formatAndWriteOutputFile = async (filePath: string, code: string) => {
-  const biomeSingleton = await getBiomeSingleton();
+const _formatAndWriteOutputFile = async (filePath: string, code: string) => {
+  const biomeSingleton = await _getBiomeSingleton();
 
   const formatted = biomeSingleton.biome.formatContent(
     biomeSingleton.projectKey,
@@ -142,19 +142,17 @@ const serializeOutputFile = async (routes: TRoutesTree, outputPath: string) => {
   const code = createRoutesFile(routes);
 
   try {
-    await formatAndWriteOutputFile(
+    await _formatAndWriteOutputFile(
       path.resolve(outputPath),
       printer.printFile(code),
     );
 
-    console.log('✨ File was parsed succesfully');
+    console.log('✨ File was parsed succesfully\n');
   } catch (err) {
     console.error('❌ Error parsing file:\n', err);
   }
 };
 
 export const SerializeHelper = {
-  isRouteLeaf,
   serializeOutputFile,
-  formatAndWriteOutputFile,
 } as const;

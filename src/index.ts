@@ -1,2 +1,2 @@
-export { generateRoutes } from './generator.js';
-export { generateRoutesPlugin } from './plugins/index.js';
+export { generateFileRouter } from './generator.js';
+export { generateViteFileRouter } from './plugins/index.js';

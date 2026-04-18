@@ -9,9 +9,8 @@ type TGenerateRoutesOptions = {
 };
 
 export type TGenerateRoutesConfig = {
-  baseFolder: string;
-  outputFile: string;
-  routeFileName?: string;
+  dir: string;
+  outputFilename?: string;
   options?: TGenerateRoutesOptions;
 };
 

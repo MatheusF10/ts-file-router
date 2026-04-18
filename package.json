@@ -1,28 +1,36 @@
 {
   "name": "ts-file-router",
-  "version": "6.0.2",
+  "version": "7.0.0",
   "description": "router based on project files using typescript",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "author": "MatheusF10",
+  "license": "ISC",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
-    "start": "tsx ./src/generator.ts",
-    "prebuild": "rimraf dist",
-    "build": "tsc",
-    "publish:package": "npm run build && npm publish"
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "lint": "biome check .",
+    "release": "npm run build && npm publish"
   },
-  "author": "MatheusF10",
-  "license": "ISC",
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "chokidar": "^5.0.0",
-    "rimraf": "^6.1.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.0"
+    "@types/node": "24.10.1",
+    "chokidar": "5.0.0",
+    "rimraf": "6.1.2",
+    "typescript": "5.9.3",
+    "vite": "7.3.2",
+    "tsup": "8.5.1"
   },
   "peerDependencies": {
     "chokidar": ">=4.0.0",
