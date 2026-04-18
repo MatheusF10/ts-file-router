@@ -1,14 +1,18 @@
 import type { TRoutesTree, TGenerateRoutesConfig } from './types.js';
 import { FileHelper, SerializeHelper } from './helpers/index.js';
-import fs from 'fs/promises';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 let _config: TGenerateRoutesConfig | null = null;
 const _configFileRouter = (config: TGenerateRoutesConfig) => {
   _config = config;
 };
 
-const _mapRoutes = async (dir: string, output: string) => {
+const _mapRoutes = async (
+  dir: string,
+  output: string,
+  root: boolean = true,
+) => {
   const routes: TRoutesTree = {};
 
   const baseDir = path.resolve(process.cwd(), dir);
@@ -38,7 +42,7 @@ const _mapRoutes = async (dir: string, output: string) => {
       const subDirectoryInfo = await fs.stat(fullPath);
 
       if (subDirectoryInfo.isDirectory()) {
-        routes[subDirectory] = await _mapRoutes(fullPath, output);
+        routes[subDirectory] = await _mapRoutes(fullPath, output, false);
 
         // If directory skip the current loop
         continue;
@@ -46,8 +50,10 @@ const _mapRoutes = async (dir: string, output: string) => {
 
       const key = path.basename(subDirectory, path.extname(subDirectory));
 
+      const pathForBrowserSync = root ? '/' : `/${key}`;
+
       routes[key] = {
-        path: `/${key}`,
+        path: pathForBrowserSync,
         import: `./${key}`,
       };
     }
