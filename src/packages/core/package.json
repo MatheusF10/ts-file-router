@@ -14,6 +14,10 @@
     "url": "git+https://github.com/MatheusF10/ts-file-router.git",
     "directory": "src/packages/core"
   },
+  "homepage": "https://github.com/MatheusF10/ts-file-router#readme",
+  "bugs": {
+    "url": "https://github.com/MatheusF10/ts-file-router/issues"
+  },
   "author": "MatheusF10",
   "license": "ISC",
   "exports": {
