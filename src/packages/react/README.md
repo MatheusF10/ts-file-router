@@ -36,9 +36,9 @@ The generator is plain Node, so webpack, Rspack, Parcel, esbuild, etc. only need
 
 Flags: `--dir <pages>`, `--out <file>` (default routes.ts), `--watch`, `--debounce <ms>`. The Vite plugin above is just a convenience wrapper.
 
-File conventions (file name = key): `index` -> directory root, `$id` -> `:id`, `$` -> splat `*`,
-`_layout` -> layout rendered around the directory (must render `<Outlet />`).
-Pages must `export default` a component.
+File conventions: `page.tsx` defines the containing directory's page, `layout.tsx` optionally defines its layout, `$id/` creates a `:id` segment, and `$/` creates a splat `*` segment. Put a dynamic segment's page in `$id/page.tsx`. A root `layout.tsx` is global; nested layouts wrap their own routes. Layout components should render `<Outlet />`.
+
+The router only discovers `page` and `layout` JavaScript/TypeScript modules. Files such as `*.hook.*` are ignored. An optional `index.tsx` should only re-export the component (for example, `export { default } from './page';`) and does not define a route. Page modules must `export default` a component.
 
 ```tsx
 <Link to="/users/:id" params={{ id: 1 }} />;

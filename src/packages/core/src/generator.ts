@@ -26,17 +26,9 @@ const _mapRoutes = async (
     : null;
 
   try {
-    const directory = await fs.readdir(baseDir, { withFileTypes: true });
-
-    if (!directory.length) {
-      console.error(
-        `Invalid pages structure: The folder "${baseDir}" must contain at least one valid file.`,
-      );
-
-      if (config.options?.exitCodeOnResolution) {
-        process.exit(1);
-      }
-    }
+    const directory = (await fs.readdir(baseDir, { withFileTypes: true })).sort(
+      (a, b) => a.name.localeCompare(b.name),
+    );
 
     for (const dirent of directory) {
       const fullPath = path.join(baseDir, dirent.name);
@@ -49,19 +41,33 @@ const _mapRoutes = async (
       }
 
       if (dirent.isDirectory()) {
-        entries.push({
-          key: dirent.name,
-          children: await _mapRoutes(fullPath, output, config, rootDir),
-        });
+        const children = await _mapRoutes(fullPath, output, config, rootDir);
 
+        if (children.length) {
+          entries.push({ key: dirent.name, children });
+        }
         continue;
       }
 
-      entries.push({
-        key: path.basename(dirent.name, path.extname(dirent.name)),
-        routePath: `/${path.relative(baseDir, fullPath)}`,
-        importPath: `./${path.relative(rootDir, fullPath).split(path.sep).join('/')}`,
-      });
+      const routeFileType = FileHelper.getRouteFileType(dirent.name);
+
+      if (routeFileType) {
+        entries.push({
+          key: routeFileType === 'page' ? 'index' : '_layout',
+          routePath: `/${path.relative(baseDir, fullPath)}`,
+          importPath: `./${path.relative(rootDir, fullPath).split(path.sep).join('/')}`,
+        });
+      }
+    }
+
+    if (baseDir === rootDir && !entries.length) {
+      console.error(
+        `Invalid pages structure: The folder "${baseDir}" must contain at least one valid route file.`,
+      );
+
+      if (config.options?.exitCodeOnResolution) {
+        process.exit(1);
+      }
     }
   } catch (err) {
     console.error(`Error mapping routes ${baseDir}:`, err);
@@ -201,4 +207,3 @@ export const generateFileRouter = async (config: TGenerateRoutesConfig) => {
     _config.options?.watcher?.debounce ?? 500,
   );
 };
-

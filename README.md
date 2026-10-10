@@ -77,24 +77,31 @@ Add a generation step before starting or building your app:
 }
 ```
 
-The generated module exports `routes` as a `const` object. Each page becomes a lazy import, and its filename becomes a key:
+The generated module exports `routes` as a `const` object. Each `page` or `layout` becomes a lazy import under its semantic route key:
 
 ```ts
 export const routes = {
   index: {
-    path: '/index.tsx',
-    import: () => import('./index.tsx'),
+    path: '/page.tsx',
+    import: () => import('./page.tsx'),
   },
   users: {
+    index: {
+      path: '/page.tsx',
+      import: () => import('./users/page.tsx'),
+    },
     $id: {
-      path: '/$id.tsx',
-      import: () => import('./users/$id.tsx'),
+      index: {
+        path: '/page.tsx',
+        import: () => import('./users/$id/page.tsx'),
+      },
     },
   },
 } as const;
 ```
 
 `path` is generated file-path metadata; route paths in the React integration are derived from the tree's keys, not these values. See [React Router integration](#react-router-integration).
+Only `page` and `layout` files with JavaScript or TypeScript module extensions are route files. Other files, including `*.hook.*`, are ignored by route generation. An `index.tsx` may re-export a page component, but it does not create a route.
 
 ## ⚙️ Configuration
 
@@ -212,15 +219,17 @@ export function App() {
 
 ### 🗺️ File conventions
 
-| File or folder name | React Router behavior                                             |
-| ------------------- | ----------------------------------------------------------------- |
-| `index.tsx`         | Index route for its directory                                     |
-| `$id.tsx`           | Dynamic `:id` segment                                             |
-| `$`                 | Splat `*` segment                                                 |
-| `_layout.tsx`       | Layout for the directory; render an `<Outlet />` for child routes |
-| Directory           | Nested route segment containing child routes                      |
+| File or folder name | React Router behavior                                                 |
+| ------------------- | --------------------------------------------------------------------- |
+| `page.tsx`          | Index page for the containing directory                               |
+| `layout.tsx`        | Optional layout for the containing directory; render an `<Outlet />`  |
+| `$id/`              | Dynamic `:id` segment; put its page in `$id/page.tsx`                 |
+| `$/`                | Splat `*` segment; put its page in `$/page.tsx`                        |
+| `*.hook.*`          | Ignored by route generation                                           |
+| `index.tsx`         | Optional barrel; re-export the page component, not a route file       |
+| Directory           | Nested route segment containing child routes                          |
 
-For example, `src/pages/users/$id.tsx` maps to `/users/:id`. `_layout` files are used as layouts and are not emitted as separate routes. Unlike earlier versions, `index` and underscore-prefixed files are not automatically ignored by the core generator.
+For example, `src/pages/users/$id/page.tsx` maps to `/users/:id`. A `layout.tsx` at the pages root is a global layout; layouts in subdirectories wrap only those routes. Route discovery ignores files other than semantic `page` and `layout` modules.
 
 ### 🔒 Type-safe links and navigation
 
