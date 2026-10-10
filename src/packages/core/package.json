@@ -1,6 +1,6 @@
 {
   "name": "ts-file-router",
-  "version": "7.1.0",
+  "version": "8.0.0",
   "description": "router based on project files using typescript",
   "type": "module",
   "bin": {
@@ -13,6 +13,10 @@
     "type": "git",
     "url": "git+https://github.com/MatheusF10/ts-file-router.git",
     "directory": "src/packages/core"
+  },
+  "homepage": "https://github.com/MatheusF10/ts-file-router#readme",
+  "bugs": {
+    "url": "https://github.com/MatheusF10/ts-file-router/issues"
   },
   "author": "MatheusF10",
   "license": "ISC",
