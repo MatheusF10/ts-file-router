@@ -1,7 +1,7 @@
 {
-  "name": "ts-file-router-vite-workspace",
+  "name": "@ts-file-router/vite",
   "private": true,
-  "description": "Internal source for the ts-file-router Vite entry point",
+  "description": "Internal workspace for the ts-file-router Vite entry point",
   "devDependencies": {
     "@types/node": "^26.6.5",
     "ts-file-router": "*",
