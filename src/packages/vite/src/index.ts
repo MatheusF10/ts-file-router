@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite';
-import { TGenerateRoutesConfig } from '../types.js';
-import { generateFileRouter } from '../generator.js';
+import type { TGenerateRoutesConfig } from 'ts-file-router/core';
+import { generateFileRouter } from 'ts-file-router/core';
 
 export const generateViteFileRouter = ({
   dir,
@@ -13,8 +13,8 @@ export const generateViteFileRouter = ({
   return {
     apply: 'serve',
     name: 'generate-vite-file-router',
-    buildStart() {
-      generateFileRouter({
+    async buildStart() {
+      await generateFileRouter({
         dir,
         options,
         outputFilename,

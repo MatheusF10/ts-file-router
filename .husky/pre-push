@@ -1,0 +1,9 @@
+npm run lint || exit 1
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    case "$local_sha" in 0000000*) continue ;; esac
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        remote_sha="origin/master"
+    fi
+    bash .github/pipelines/check-version-bump.sh "$remote_sha" "$local_sha" || exit 1
+done

@@ -3,14 +3,20 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "jsx": "react-jsx",
     "outDir": "dist",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "rootDir": "src",
+    "rootDir": "..",
+    "paths": {
+      "ts-file-router": ["./src/index.ts"],
+      "ts-file-router/core": ["./src/index.ts"]
+    },
     "strict": true,
     "declaration": true,
     "declarationMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src", "tests"]
 }

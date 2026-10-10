@@ -1,0 +1,11 @@
+{
+  "name": "ts-file-router-vite-workspace",
+  "private": true,
+  "description": "Internal source for the ts-file-router Vite entry point",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "ts-file-router": "*",
+    "typescript": "5.9.3",
+    "vite": "7.3.2"
+  }
+}

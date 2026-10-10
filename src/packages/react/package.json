@@ -1,0 +1,17 @@
+{
+  "name": "ts-file-router-react-workspace",
+  "private": true,
+  "description": "Internal source and tests for the ts-file-router React entry point",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "ts-file-router": "*",
+    "typescript": "5.9.3",
+    "vite": "7.3.2"
+  }
+}

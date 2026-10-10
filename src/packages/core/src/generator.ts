@@ -1,9 +1,12 @@
-import type { TRoutesTree, TGenerateRoutesConfig } from './types.js';
+import type { TGenerateRoutesConfig } from './types.js';
+import { generateManifest, getManifestFilename } from './manifest.js';
 import { FileHelper, SerializeHelper } from './helpers/index.js';
+import type { TRouteEntry } from './helpers/serializeHelper.js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 let _config: TGenerateRoutesConfig | null = null;
+
 const _configFileRouter = (config: TGenerateRoutesConfig) => {
   _config = config;
 };
@@ -11,51 +14,54 @@ const _configFileRouter = (config: TGenerateRoutesConfig) => {
 const _mapRoutes = async (
   dir: string,
   output: string,
-  root: boolean = true,
-) => {
-  const routes: TRoutesTree = {};
-
+  config: TGenerateRoutesConfig,
+  root?: string,
+): Promise<TRouteEntry[]> => {
+  const entries: TRouteEntry[] = [];
   const baseDir = path.resolve(process.cwd(), dir);
+  // Imports must be relative to the generated routes file (the root dir)
+  const rootDir = root ?? baseDir;
+  const manifestFilename = config.options?.manifest
+    ? getManifestFilename(config.options.manifest)
+    : null;
 
   try {
-    const directory = await fs.readdir(baseDir);
+    const directory = await fs.readdir(baseDir, { withFileTypes: true });
 
     if (!directory.length) {
       console.error(
         `Invalid pages structure: The folder "${baseDir}" must contain at least one valid file.`,
       );
 
-      if (!!_config?.options?.exitCodeOnResolution) {
+      if (config.options?.exitCodeOnResolution) {
         process.exit(1);
       }
     }
 
-    for (const subDirectory of directory) {
-      const fullPath = path.join(baseDir, subDirectory);
+    for (const dirent of directory) {
+      const fullPath = path.join(baseDir, dirent.name);
 
-      // Skip the processing with ignored files
-      if (FileHelper.getIgnoredFiles(fullPath, output)) {
+      if (
+        FileHelper.getIgnoredFiles(fullPath, output) ||
+        dirent.name === manifestFilename
+      ) {
         continue;
       }
 
-      // Get subDirectories info to control recursive paths with folders or build the object in file case
-      const subDirectoryInfo = await fs.stat(fullPath);
+      if (dirent.isDirectory()) {
+        entries.push({
+          key: dirent.name,
+          children: await _mapRoutes(fullPath, output, config, rootDir),
+        });
 
-      if (subDirectoryInfo.isDirectory()) {
-        routes[subDirectory] = await _mapRoutes(fullPath, output, false);
-
-        // If directory skip the current loop
         continue;
       }
 
-      const key = path.basename(subDirectory, path.extname(subDirectory));
-
-      const pathForBrowserSync = root ? '/' : `/${key}`;
-
-      routes[key] = {
-        path: pathForBrowserSync,
-        import: `./${key}`,
-      };
+      entries.push({
+        key: path.basename(dirent.name, path.extname(dirent.name)),
+        routePath: `/${path.relative(baseDir, fullPath)}`,
+        importPath: `./${path.relative(rootDir, fullPath).split(path.sep).join('/')}`,
+      });
     }
   } catch (err) {
     console.error(`Error mapping routes ${baseDir}:`, err);
@@ -64,17 +70,24 @@ const _mapRoutes = async (
     process.exit(1);
   }
 
-  return routes;
+  return entries;
 };
+
+const WATCH_EVENTS = new Set<string>(['add', 'addDir', 'unlink', 'unlinkDir']);
 
 const _serializer = async (dir: string, output: string) => {
   const exitCodeOnResolution = !!_config?.options?.exitCodeOnResolution;
-
   try {
-    SerializeHelper.serializeOutputFile(
-      await _mapRoutes(dir, output),
+    await SerializeHelper.serializeOutputFile(
+      await _mapRoutes(dir, output, _config!),
       path.resolve(dir, output),
     );
+
+    const manifest = _config?.options?.manifest;
+
+    if (manifest) {
+      await generateManifest(dir, output, manifest);
+    }
 
     // Promise writeFile was successfully resolved
     console.log('🚀 Routes generated successfully!\n');
@@ -107,9 +120,12 @@ const _watcher = async (
 
   let timeoutId: NodeJS.Timeout | null;
 
-  const watcher = watch(dir, {
+  const manifestRoot = _config?.options?.manifest?.root;
+
+  const watcher = watch(manifestRoot ? [dir, manifestRoot] : dir, {
     ignoreInitial: true,
     persistent: true,
+    ignored: /(^|[\\/])(node_modules|\.git|dist)([\\/]|$)/,
   });
 
   console.log(`👀 Watching folder: "${dir}" for changes...`);
@@ -135,18 +151,13 @@ const _watcher = async (
 
       return;
     }
-
-    const watchOnEvents: (typeof ev)[] = [
-      'add',
-      'addDir',
-      'unlink',
-      'unlinkDir',
-    ];
-
-    const ignoredGeneralFiles = FileHelper.getIgnoredFiles(file, output);
+    const ignoredGeneralFiles =
+      FileHelper.getIgnoredFiles(file, output) ||
+      (!!_config?.options?.manifest &&
+        path.basename(file) === getManifestFilename(_config.options.manifest));
 
     // If added, or change (renamed) or deleted, update routes
-    if (watchOnEvents.includes(ev) && !ignoredGeneralFiles) {
+    if (WATCH_EVENTS.has(ev) && !ignoredGeneralFiles) {
       console.log(
         `🔎 Detected new files from path: "${file}" creating new routes...\n`,
       );
@@ -169,7 +180,8 @@ const _watcher = async (
   process.on('SIGTERM', cleanup);
 };
 
-export const generateFileRouter = (config: TGenerateRoutesConfig) => {
+/** Resolves once the routes file exists; the watcher (if enabled) keeps running afterwards. */
+export const generateFileRouter = async (config: TGenerateRoutesConfig) => {
   _configFileRouter(config);
 
   if (!_config || !_config.dir) {
@@ -180,12 +192,13 @@ export const generateFileRouter = (config: TGenerateRoutesConfig) => {
     _config.outputFilename = 'routes.ts';
   }
 
-  _serializer(_config.dir, _config.outputFilename);
+  await _serializer(_config.dir, _config.outputFilename);
 
-  _watcher(
+  await _watcher(
     _config.dir,
     _config.outputFilename,
     !!_config.options?.watcher?.watch,
     _config.options?.watcher?.debounce ?? 500,
   );
 };
+

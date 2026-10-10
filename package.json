@@ -1,43 +1,39 @@
 {
-  "name": "ts-file-router",
-  "version": "7.0.1",
-  "description": "router based on project files using typescript",
+  "name": "ts-file-router-monorepo",
+  "private": true,
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "author": "MatheusF10",
   "license": "ISC",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist"
+  "workspaces": [
+    "src/packages/*"
   ],
   "scripts": {
-    "dev": "tsup --watch",
-    "build": "tsup",
-    "lint": "biome check .",
-    "release": "npm run build && npm publish"
+    "build": "npm run build --workspace=ts-file-router",
+    "build:core": "npm run build --workspace=ts-file-router",
+    "dev": "npm run dev --workspace=ts-file-router",
+    "lint": "oxlint src",
+    "test": "vitest run",
+    "test:react": "vitest run src/packages/react",
+    "test:core": "vitest run src/packages/core",
+    "prepare": "husky",
+    "check:version": "bash .github/pipelines/check-version-bump.sh origin/master",
+    "release": "npm run build && bash .github/pipelines/publish-changed.sh"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "oxlint"
   },
   "devDependencies": {
-    "@types/node": "24.10.1",
-    "chokidar": "5.0.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/react-dom": "^19.3.0",
+    "husky": "^9.1.7",
+    "jsdom": "^29.1.1",
+    "lint-staged": "^16.4.0",
+    "oxlint": "1.87.0",
+    "react-dom": "^19.3.0",
     "rimraf": "6.1.2",
-    "typescript": "5.9.3",
-    "vite": "7.3.2",
-    "tsup": "8.5.1"
-  },
-  "peerDependencies": {
-    "chokidar": ">=4.0.0",
-    "vite": ">=3.0.0"
-  },
-  "dependencies": {
-    "@biomejs/js-api": "4.0.0",
-    "@biomejs/wasm-nodejs": "2.3.11"
+    "vitest": "^5.0.3"
   }
 }
