@@ -4,11 +4,16 @@
   "description": "router based on project files using typescript",
   "type": "module",
   "bin": {
-    "ts-file-router": "./dist/cli.js"
+    "ts-file-router": "dist/cli.js"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatheusF10/ts-file-router.git",
+    "directory": "src/packages/core"
+  },
   "author": "MatheusF10",
   "license": "ISC",
   "exports": {
